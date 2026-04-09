@@ -12,9 +12,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;ba
 .sidebar-header{padding:22px 20px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
 .sidebar-logo{font-size:22px;font-weight:800;letter-spacing:-1px}
 .sidebar-sub{font-size:10px;color:rgba(255,255,255,.4);margin-top:3px;text-transform:uppercase;letter-spacing:1.5px}
-.zone-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.1)}
-.ztab{flex:1;padding:11px 0;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.4);transition:all .2s;border-bottom:2px solid transparent}
+.zone-tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid rgba(255,255,255,.1)}
+.ztab{padding:10px 0;text-align:center;font-size:11px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.4);transition:all .2s;border-bottom:2px solid transparent}
 .ztab.active{color:#F5C518;border-bottom-color:#F5C518}
+.conf-tab{grid-column:span 2;font-size:12px;border-bottom:1px solid rgba(255,255,255,.1);background:rgba(245,197,24,.06)}
+.ita-tab{color:rgba(245,197,24,.45)}
 .email-list{padding:6px 0;flex:1}
 .eitem{padding:9px 18px;cursor:pointer;transition:background .15s;border-left:3px solid transparent}
 .eitem:hover{background:rgba(255,255,255,.06)}
@@ -53,12 +55,14 @@ iframe{border:none;width:100%;display:block;min-height:400px}
   <div class="sidebar">
     <div class="sidebar-header">
       <div class="sidebar-logo">RATIO</div>
-      <div class="sidebar-sub">Email Templates · v3</div>
+      <div class="sidebar-sub">Email Templates · v4</div>
     </div>
     <div class="zone-tabs">
-      <div class="ztab active" onclick="switchZone('nord',this)">Nord</div>
+      <div class="ztab conf-tab active" onclick="switchZone('conferme',this)">✉ Conferme</div>
+      <div class="ztab" onclick="switchZone('nord',this)">Nord</div>
       <div class="ztab" onclick="switchZone('centro',this)">Centro</div>
       <div class="ztab" onclick="switchZone('sud',this)">Sud</div>
+      <div class="ztab ita-tab" onclick="switchZone('italia',this)">Italia ★</div>
     </div>
     <div class="email-list" id="emailList"></div>
   </div>
@@ -132,6 +136,17 @@ function renderBlock(bl) {
     case 'pricing':
       return renderPricing(bl[1]);
 
+    case 'ctadual':
+      return `<table cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 8px;">
+        <tr><td style="background:#F5C518;border-radius:6px;box-shadow:0 2px 8px rgba(245,197,24,.35);">
+          <a href="${bl[2]}" style="display:inline-block;padding:14px 36px;${FA}font-size:14px;font-weight:800;color:#1B3A6B;text-decoration:none;letter-spacing:.3px;">${bl[1]} →</a>
+        </td></tr>
+        <tr><td style="height:10px;"></td></tr>
+        <tr><td style="background:transparent;border:1.5px solid #C0C8D8;border-radius:6px;">
+          <a href="${bl[4]}" style="display:inline-block;padding:11px 28px;${FA}font-size:13px;font-weight:600;color:#555;text-decoration:none;letter-spacing:.2px;">${bl[3]} →</a>
+        </td></tr>
+      </table>`;
+
     default: return '';
   }
 }
@@ -191,6 +206,11 @@ function renderBodyOnly(bodyHTML) {
 }
 
 // ─── PRICING ─────────────────────────────────────────────────────────────────
+const PP_IT = [
+  ['Piano Italia Mensile','€900 / mese','Accesso completo Nord + Centro + Sud. Nessun impegno annuale. Classifica aggiornata ogni mattina su tutti e tre i mercati.',false],
+  ['Piano Italia Annuale','€708 / mese · €8.500 / anno','Il piano raccomandato. Risparmio di <strong style="color:#F5C518;">€2.300</strong> rispetto al mensile. Accesso a tutti e tre i mercati per 12 mesi. Floor price: mai sotto €8.500.',true],
+];
+
 const PP = [
   ['Piano Mensile','€350 / mese','Nessun impegno annuale. Classifica aggiornata ogni mattina, alert personalizzati sulla tua zona.',false],
   ['Piano Annuale Smart','€217 / mese · €2.600 / anno','Report settimanale, alert avanzati, accesso beta alle nuove funzionalità. Risparmio di <strong style="color:#F5C518;">€1.600</strong> rispetto al mensile.',true],
@@ -200,12 +220,12 @@ const PP = [
 // ─── EMAIL DATA ───────────────────────────────────────────────────────────────
 const zones = {
 
-// ══════════════════════════════════ NORD ══════════════════════════════════════
-nord: { label:'Nord Italia', emails: [
+// ══════════════════════════════════ CONFERME ══════════════════════════════════
+conferme: { label:'Email di Conferma', emails: [
 
-  { id:'n1', name:'Benvenuto e accesso', timing:'Giorno 0 · T+0h', bucket:'Tutti', hasHeader:true,
-    subjects:['Sei dentro. Ecco cosa fare adesso, [NOME].','Il Nord è aperto. 72 ore. Inizia da qui.','[NOME], il tuo trial è attivo.'],
-    previews:['La classifica aggiornata ti aspetta. 3 minuti.','Disegna la zona. Ratio fa il resto.','Tre giorni per vedere il mercato come non l\'hai mai visto.'],
+  { id:'conf_n', name:'Conferma acquisto — Nord', timing:'Giorno 0 · T+0h', bucket:'Pacchetto Nord', hasHeader:false,
+    subjects:['Sei dentro. Il Nord è aperto.','[NOME], il tuo accesso Nord è attivo.','Confermato. Ecco cosa fare adesso.'],
+    previews:['72 ore. La classifica ti aspetta.','3 minuti per la prima quick win.','Disegna la zona. Ratio fa il resto.'],
     body:[
       ['greeting'],
       ['p','il pagamento è confermato. Da adesso hai <strong>72 ore di accesso completo</strong> al mercato immobiliare del Nord Italia.'],
@@ -220,6 +240,234 @@ nord: { label:'Nord Italia', emails: [
       ['sign']
     ]
   },
+
+  { id:'conf_c', name:'Conferma acquisto — Centro', timing:'Giorno 0 · T+0h', bucket:'Pacchetto Centro', hasHeader:false,
+    subjects:['Sei dentro. Il Centro è aperto.','[NOME], il tuo accesso Centro è attivo.','Confermato. Ecco cosa fare adesso.'],
+    previews:['72 ore. La classifica ti aspetta.','3 minuti per la prima quick win.','Roma, Firenze — disegna la zona.'],
+    body:[
+      ['greeting'],
+      ['p','il pagamento è confermato. Da adesso hai <strong>72 ore di accesso completo</strong> al mercato immobiliare del Centro Italia.'],
+      ['p','Ci vogliono <strong>3 minuti</strong> per iniziare:'],
+      ['ebullets',[
+        ['1️⃣',`<strong>Entra nel software</strong> con le tue credenziali`],
+        ['2️⃣',`<strong>Disegna la zona</strong> che ti interessa nel Centro`],
+        ['3️⃣',`<strong>Guarda la classifica</strong>: ogni immobile ordinato dal più conveniente al meno conveniente`],
+      ]],
+      ['p','Il Centro Italia è il mercato <strong>più eterogeneo d\'Italia</strong>. Roma, Firenze, le Marche: ogni area si comporta diversamente. <strong><em>Il vantaggio di Ratio è che ordina tutto con lo stesso criterio.</em></strong>'],
+      ['cta','Accedi adesso','[LINK_SOFTWARE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'conf_s', name:'Conferma acquisto — Sud', timing:'Giorno 0 · T+0h', bucket:'Pacchetto Sud', hasHeader:false,
+    subjects:['Sei dentro. Il Sud è aperto.','[NOME], il tuo accesso Sud è attivo.','Confermato. Ecco cosa fare adesso.'],
+    previews:['72 ore. La classifica ti aspetta.','Al Sud gli scostamenti sono i più alti d\'Italia.','Disegna la zona. Ratio fa il resto.'],
+    body:[
+      ['greeting'],
+      ['p','il pagamento è confermato. Da adesso hai <strong>72 ore di accesso completo</strong> al mercato immobiliare del Sud Italia.'],
+      ['p','Ci vogliono <strong>3 minuti</strong> per iniziare:'],
+      ['ebullets',[
+        ['1️⃣',`<strong>Entra nel software</strong> con le tue credenziali`],
+        ['2️⃣',`<strong>Disegna la zona</strong> che ti interessa nel Sud`],
+        ['3️⃣',`<strong>Guarda la classifica</strong>: ogni immobile ordinato dal più conveniente al meno conveniente`],
+      ]],
+      ['p','Il Sud è il mercato con gli <strong>scostamenti più ampi d\'Italia</strong>. Il motivo: il mercato è <strong>meno efficiente nell\'aggregare le informazioni</strong>. <strong><em>Chi ha il dato giusto trova opportunità che gli altri non vedono.</em></strong>'],
+      ['cta','Accedi adesso','[LINK_SOFTWARE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'conf_it', name:'Conferma acquisto — Italia', timing:'Giorno 0 · T+0h', bucket:'Pacchetto Italia €900', hasHeader:false,
+    subjects:['Sei dentro. Tutta Italia è aperta.','[NOME], il pacchetto Italia è attivo.','Confermato. Tre mercati. Adesso.'],
+    previews:['Nord, Centro, Sud — tutto in un piano.','3 mercati aperti. Da adesso.','La classifica completa d\'Italia ti aspetta.'],
+    body:[
+      ['greeting'],
+      ['p','il pagamento è confermato. Da adesso hai <strong>accesso completo a tutta Italia</strong> — Nord, Centro e Sud — in un unico piano.'],
+      ['p','Ci vogliono <strong>3 minuti</strong> per iniziare:'],
+      ['ebullets',[
+        ['1️⃣',`<strong>Entra nel software</strong> con le tue credenziali`],
+        ['2️⃣',`<strong>Scegli da quale zona partire</strong> — o apri tutte e tre in contemporanea`],
+        ['3️⃣',`<strong>Guarda le classifiche</strong>: ogni mercato ordinato dal più conveniente al meno conveniente, <em>con lo stesso criterio</em>`],
+      ]],
+      ['p','Hai la visibilità che <strong>nessun operatore multi-zona</strong> ha in Italia in questo momento. Tre mercati. <strong>Un\'unica logica di ordinamento.</strong>'],
+      ['data',[
+        ['Zone attive:','Nord · Centro · Sud'],
+        ['Immobili in classifica:','oltre 600/settimana totali'],
+        ['Scostamenti monitorati:','fino al 25%+ sulla via specifica'],
+      ]],
+      ['p','Il vantaggio del pacchetto Italia non è solo la copertura. È la <strong><em>visione macro</em></strong>: puoi vedere dove il mercato si sta aprendo, zona per zona, <strong>ogni mattina</strong>.'],
+      ['cta','Accedi adesso','[LINK_SOFTWARE]'],
+      ['sign']
+    ]
+  },
+
+]},
+
+// ══════════════════════════════════ ITALIA ════════════════════════════════════
+italia: { label:'Italia Completa ★', emails: [
+
+  { id:'it2', name:'Tre classifiche aperte', timing:'Giorno 1 · T+24h', bucket:'Tutti', hasHeader:false,
+    subjects:['Tre mercati aperti stamattina, [NOME].','Cosa guardare prima quando hai tutto.','La classifica del Nord, del Centro e del Sud. Adesso.'],
+    previews:['Oltre 600 immobili sotto prezzo questa settimana.','Non devi scegliere. Puoi vedere tutto.','Dove sta il margine migliore questa settimana.'],
+    body:[
+      ['greeting'],
+      ['p','stamattina hai <strong>tre classifiche attive</strong>. Più di 600 immobili con scostamento positivo rispetto alla media della loro via, distribuiti su tutta Italia.'],
+      ['p','Come orientarsi quando hai tutto:'],
+      ['ebullets',[
+        ['🏙️',`<strong>Nord</strong> — mercato rapido, alta liquidità. Guarda prima se stai cercando <strong>velocità di esecuzione</strong>`],
+        ['📍',`<strong>Centro</strong> — mercato eterogeneo. Guarda se stai cercando <strong>specifiche microzone</strong> con scostamenti forti`],
+        ['📊',`<strong>Sud</strong> — mercato con la massima asimmetria informativa. Guarda se stai cercando <strong>il margine più alto</strong>`],
+      ]],
+      ['p','Hai ancora <strong>quasi 48 ore</strong> di trial. <strong><em>Ogni mercato si aggiorna ogni mattina — oggi non è uguale a domani.</em></strong>'],
+      ['cta','Apri le classifiche','[LINK_SOFTWARE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'it3', name:'Cross-market intelligence', timing:'Giorno 2 · T+48h', bucket:'Tutti', hasHeader:false,
+    subjects:['Dove sta il margine migliore questa settimana?','Nord vs Sud: la risposta è nei dati.','La classifica trasversale che nessun portale ha.'],
+    previews:['Non è opinione. È lo scostamento reale.','Tre mercati. Un\'unica logica.','Il dato che cambia la prospettiva su dove operare.'],
+    body:[
+      ['greeting'],
+      ['p','questa settimana il confronto tra i tre mercati racconta una storia precisa:'],
+      ['data',[
+        ['Scostamento medio top 10 · Nord:','fino al 18% sulla via'],
+        ['Scostamento medio top 10 · Centro:','fino al 20% sulla via'],
+        ['Scostamento medio top 10 · Sud:','fino al 25% sulla via'],
+      ]],
+      ['p','Il Sud ha gli scostamenti più alti perché il mercato è <strong>meno efficiente nell\'aggregare l\'informazione</strong>. Il Nord li ha più bassi perché è <strong>più liquido e più conteso</strong>. Il Centro è in mezzo — ma con <strong>microzone con scostamenti tra i più alti d\'Italia</strong>.'],
+      ['p','Chi opera su una sola zona <strong>non vede questo quadro</strong>. Chi ha il pacchetto Italia lo vede <strong>ogni mattina</strong>. <strong><em>Questa è la differenza tra reagire e anticipare.</em></strong>'],
+      ['p','Il trial scade <strong>domani</strong>.'],
+      ['cta','Apri le classifiche','[LINK_SOFTWARE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'it4', name:'Scadenza imminente', timing:'Giorno 3 · T+69h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Il trial scade tra poche ore, [NOME].','Stasera tre mercati si chiudono.','Ultima notte con accesso completo a tutta Italia.'],
+    previews:['Scegli come continuare prima di mezzanotte.','Il piano annuale si ripaga con la prima trattativa.','O ci sentiamo per qualcosa su misura.'],
+    body:[
+      ['greeting'],
+      ['hook','il trial scade stasera.'],
+      ['p','In tre giorni hai avuto accesso alle classifiche di <strong>tutta Italia</strong>. Nord, Centro e Sud: ogni immobile sotto prezzo, ordinato per <strong>scostamento reale sulla via</strong>, aggiornato ogni mattina.'],
+      ['p','Puoi continuare in due modi:'],
+      ['pricing',PP_IT],
+      ['p','Il Piano Italia Annuale si ripaga con <strong>una sola trattativa</strong> in cui porti il dato per via specifica. <strong><em>Chi opera su più mercati lo considera già un costo fisso dell\'attività.</em></strong>'],
+      ['p','Se invece il tuo utilizzo è più strutturato — multi-utente, report dedicati, onboarding — c\'è un\'opzione su misura:'],
+      ['ctadual','Italia Annuale — €8.500/anno','[LINK_CHECKOUT_ITALIA_ANNUALE]','Piano personalizzato','[LINK_PIANO_PERSONALIZZATO]'],
+      ['sign']
+    ]
+  },
+
+  { id:'it5', name:'Trial scaduto', timing:'Giorno 4 · T+96h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Il trial è scaduto, [NOME].','Tre mercati chiusi. Da ieri sera.','Accesso Italia terminato.'],
+    previews:['Le classifiche di stamattina sono attive. Tu no.','Riattiva quando vuoi.','La zona che hai salvato è ancora nel tuo account.'],
+    body:[
+      ['greeting'],
+      ['p','il trial è scaduto <strong>ieri sera</strong>.'],
+      ['p','Le classifiche di stamattina sono attive su tutti e tre i mercati. <strong>Oltre 600 immobili</strong> con scostamento positivo. Le zone che hai salvato durante il trial sono ancora nel tuo account.'],
+      ['highlight','Senza abbonamento, <strong>quei dati non li vedi</strong>. Puoi riattivare l\'accesso in qualsiasi momento e ripartire esattamente da dove hai lasciato — su tutti e tre i mercati.'],
+      ['ctadual','Riattiva Italia Annuale','[LINK_CHECKOUT_ITALIA_ANNUALE]','Piano personalizzato','[LINK_PIANO_PERSONALIZZATO]'],
+      ['sign']
+    ]
+  },
+
+  { id:'it6', name:'Argomento ROI multi-zona', timing:'Giorno 5 · T+120h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Quanto ti costa non avere Ratio su tutta Italia?','Tre mercati. Tre volte le opportunità. Fai il conto.','€8.500 all\'anno o €35.000 a deal — scegli tu.'],
+    previews:['Non è marketing. Sono i numeri del flipping su scala nazionale.','Se fai 1 deal a zona, l\'abbonamento si ripaga 10 volte.','Il vantaggio informativo vale di più quando lo usi su più mercati.'],
+    body:[
+      ['greeting'],
+      ['p','chi opera su tutta Italia fa <strong>operazioni in mercati diversi</strong>. La matematica è semplice:'],
+      ['data',[
+        ['Costo Piano Italia Annuale:','€8.500'],
+        ['Margine medio 1 deal (qualsiasi zona):','€25k–50k'],
+        ['Se fai 1 deal a zona (3 totali):','oltre 8× il costo'],
+        ['Se fai 1 solo deal su 3 mercati:','oltre 3× il costo'],
+      ]],
+      ['p','Il vantaggio informativo del dato per via specifica <strong>vale di più quando lo applichi su più mercati</strong>. Ogni trattativa in cui usi lo street price è una trattativa in cui la controparte <strong><em>non ha le stesse informazioni</em></strong>.'],
+      ['p','Chi usa Ratio Italia come strumento di lavoro <strong>non lo considera un costo</strong>. È la base operativa.'],
+      ['ctadual','Attiva Italia Annuale — €8.500/anno','[LINK_CHECKOUT_ITALIA_ANNUALE]','Piano personalizzato','[LINK_PIANO_PERSONALIZZATO]'],
+      ['sign']
+    ]
+  },
+
+  { id:'it7', name:'Bonus Report × 3 zone', timing:'Giorno 6 · T+144h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Tre Report Storici. Per chi abbona entro domani.','[NOME], questo non lo riceve nessun altro abbonato.','48 ore. Poi non sarà più disponibile.'],
+    previews:['30 giorni di mercato per ogni zona. In un documento.','Nord + Centro + Sud — 4 settimane di dati.','Scade tra 48 ore.'],
+    body:[
+      ['greeting'],
+      ['p','il <strong>Report Storico 30 giorni</strong> non è incluso in nessun piano di abbonamento.'],
+      ['p','Per chi ha il pacchetto Italia, lo mandiamo <strong>su tutti e tre i mercati</strong>:'],
+      ['ebullets',[
+        ['📋',`<strong>Report Nord</strong> — 4 settimane di classifica, vie con gli scostamenti più alti, trend di apertura e chiusura`],
+        ['📋',`<strong>Report Centro</strong> — Microzone più attive di Roma e Firenze, andamento per via specifica`],
+        ['📋',`<strong>Report Sud</strong> — Oscillazioni da Napoli a Palermo, zone meno coperte dai portali`],
+      ]],
+      ['p','Sono i documenti che si usano <strong>prima di ogni trattativa</strong> per capire se quel mercato si sta aprendo o chiudendo. Con tre mercati attivi, <strong><em>il vantaggio di contesto si moltiplica</em></strong>.'],
+      ['highlight','<strong>Chi si abbona entro le prossime 48 ore</strong> riceve tutti e tre i report in omaggio. Una sola volta. Dopo questa finestra non saranno più disponibili come extra.'],
+      ['ctadual','Italia Annuale + 3 Report','[LINK_CHECKOUT_ITALIA_ANNUALE]','Piano personalizzato','[LINK_PIANO_PERSONALIZZATO]'],
+      ['sign']
+    ]
+  },
+
+  { id:'it8', name:'Domanda diretta', timing:'Giorno 7 · T+168h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Una domanda diretta, [NOME].','C\'è qualcosa che non ti ha convinto?','Leggo questa mail io personalmente.'],
+    previews:['Non un bot. Rispondimi qui.','Il prezzo, le zone, il momento.','Se c\'è qualcosa che non funziona, dimmelo.'],
+    body:[
+      ['greeting'],
+      ['p','una domanda diretta: <strong>c\'è qualcosa che non ti ha convinto</strong> durante il trial?'],
+      ['bullets',[
+        `Il <strong>prezzo</strong> del pacchetto Italia`,
+        `Le <strong>zone coperte</strong> — stai operando solo su una o due`,
+        `Una <strong>funzionalità</strong> che mancava`,
+        `Il <strong>timing</strong> sbagliato — non è il momento`,
+      ]],
+      ['p','Rispondimi a questa email. <strong>La leggo io</strong>. Non è un automatismo.'],
+      ['p','Se stai operando su un solo mercato, possiamo valutare un <strong>piano zona singola</strong> invece del pacchetto Italia. Se c\'è qualcosa che nel prodotto non funziona come dovrebbe, <strong><em>voglio saperlo</em></strong>.'],
+      ['ctadual','Guarda i piani Italia','[LINK_CHECKOUT_ITALIA_ANNUALE]','Piano personalizzato','[LINK_PIANO_PERSONALIZZATO]'],
+      ['sign']
+    ]
+  },
+
+  { id:'it9', name:'Offerta finale + referral', timing:'Giorno 8 · T+192h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Ultima cosa, [NOME]. Poi non ti scrivo più.','Il primo mese Italia a prezzo ridotto. Una sola volta.','Hai un collega che opera su più mercati?'],
+    previews:['Due opzioni. Poi si chiude.','Poi torna a prezzo pieno.','Se conosci qualcuno, c\'è qualcosa per entrambi.'],
+    body:[
+      ['greeting'],
+      ['p','<strong>ultima comunicazione commerciale</strong> da parte nostra.'],
+      ['ebullets',[
+        ['💶',`Se il <strong>prezzo era il problema</strong>: il primo mese del piano Italia mensile è disponibile a <strong>€650 invece di €900</strong>. Una volta sola. Dal secondo mese torna a prezzo pieno. Disdici quando vuoi.`],
+        ['🤝',`Se <strong>conosci un investitore o una flipping company</strong> che opera su più zone: rispondici con la sua email. Se si abbona entro 7 giorni, vi mandiamo a entrambi i <strong>3 Report Storici 30 giorni</strong> — uno per ogni mercato.`],
+      ]],
+      ['p','Nessun obbligo. <strong>Solo se hai qualcuno in mente.</strong>'],
+      ['ctadual','Primo mese Italia a €650','[LINK_CHECKOUT_ITALIA_RECOVERY]','Piano personalizzato','[LINK_PIANO_PERSONALIZZATO]'],
+      ['sign']
+    ]
+  },
+
+  { id:'it10', name:'Nurturing macro Italia', timing:'Giorno 14+', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Il mercato immobiliare italiano questa settimana.','Un aggiornamento macro. Nessuna offerta.','Dove si concentra il capitale in Italia in questo momento.'],
+    previews:['Solo dati. Poi decidi tu.','Il quadro nazionale non si è fermato.','Nord, Centro, Sud — cosa sta succedendo.'],
+    body:[
+      ['greeting'],
+      ['p','aggiornamento del mercato immobiliare italiano di <strong>questa settimana</strong>.'],
+      ['data',[
+        ['Totale immobili in classifica:','oltre 600/settimana'],
+        ['Zona con scostamenti più alti:','Sud (fino al 25%+)'],
+        ['Zona con maggiore liquidità:','Nord (velocità di turnover)'],
+        ['Zona con microzone più attive:','Centro (Roma, Firenze)'],
+      ]],
+      ['p','Il quadro nazionale di questa settimana è chiaro: <strong>il Sud offre i margini più ampi</strong>, il <strong>Nord offre la velocità di esecuzione</strong>, il <strong>Centro offre la densità di microzone</strong>. Chi opera su scala nazionale <strong><em>ottimizza su tutti e tre i fattori</em></strong>.'],
+      ['p','Queste sono le informazioni che gli abbonati attivi al pacchetto Italia <strong>ricevono ogni mattina</strong>.'],
+      ['ctadual','Attiva Italia Annuale','[LINK_CHECKOUT_ITALIA_ANNUALE]','Piano personalizzato','[LINK_PIANO_PERSONALIZZATO]'],
+      ['sign']
+    ]
+  },
+
+]},
+
+// ══════════════════════════════════ NORD ══════════════════════════════════════
+nord: { label:'Nord Italia', emails: [
 
   { id:'n2', name:'La classifica di stamattina', timing:'Giorno 1 · T+24h', bucket:'Tutti', hasHeader:false,
     subjects:['Hai visto cosa c\'era stamattina nel Nord?','La classifica di oggi. Vale i 3 minuti.','Questo dato nessun agente te lo dà.'],
@@ -354,24 +602,6 @@ nord: { label:'Nord Italia', emails: [
 // ══════════════════════════════════ CENTRO ════════════════════════════════════
 centro: { label:'Centro Italia', emails: [
 
-  { id:'c1', name:'Benvenuto e accesso', timing:'Giorno 0 · T+0h', bucket:'Tutti', hasHeader:true,
-    subjects:['Sei dentro. Ecco cosa fare adesso, [NOME].','Il Centro Italia è aperto. 72 ore. Inizia da qui.','[NOME], il tuo trial è attivo.'],
-    previews:['La classifica aggiornata ti aspetta.','Disegna la zona. Ratio fa il resto.','Tre giorni per vedere il mercato come non l\'hai mai visto.'],
-    body:[
-      ['greeting'],
-      ['p','il pagamento è confermato. Da adesso hai <strong>72 ore di accesso completo</strong> al mercato immobiliare del Centro Italia.'],
-      ['p','Ci vogliono <strong>3 minuti</strong> per iniziare:'],
-      ['ebullets',[
-        ['1️⃣',`<strong>Entra nel software</strong> con le tue credenziali`],
-        ['2️⃣',`<strong>Disegna la zona</strong> che ti interessa nel Centro`],
-        ['3️⃣',`<strong>Guarda la classifica</strong>: ogni immobile ordinato dal più conveniente al meno conveniente`],
-      ]],
-      ['p','Il Centro Italia è il mercato <strong>più eterogeneo d\'Italia</strong>. Roma, Firenze, le Marche, l\'Umbria: ogni area si comporta diversamente. <strong><em>Il vantaggio di Ratio è che ordina tutto con lo stesso criterio.</em></strong>'],
-      ['cta','Accedi adesso','[LINK_SOFTWARE]'],
-      ['sign']
-    ]
-  },
-
   { id:'c2', name:'La classifica di stamattina', timing:'Giorno 1 · T+24h', bucket:'Tutti', hasHeader:false,
     subjects:['Hai visto cosa c\'era stamattina nel Centro?','La classifica di oggi. Vale i 3 minuti.','Questo dato nessun agente te lo dà.'],
     previews:['Oltre 200 immobili sotto prezzo. Ogni mattina.','Aprila. Poi capisci perché.','Prezzo al mq per via specifica. Solo qui.'],
@@ -504,24 +734,6 @@ centro: { label:'Centro Italia', emails: [
 
 // ══════════════════════════════════ SUD ═══════════════════════════════════════
 sud: { label:'Sud Italia', emails: [
-
-  { id:'s1', name:'Benvenuto e accesso', timing:'Giorno 0 · T+0h', bucket:'Tutti', hasHeader:true,
-    subjects:['Sei dentro. Ecco cosa fare adesso, [NOME].','Il Sud è aperto. 72 ore. Inizia da qui.','[NOME], il tuo trial è attivo.'],
-    previews:['La classifica aggiornata ti aspetta.','Disegna la zona. Ratio fa il resto.','Al Sud gli scostamenti sono i più alti d\'Italia.'],
-    body:[
-      ['greeting'],
-      ['p','il pagamento è confermato. Da adesso hai <strong>72 ore di accesso completo</strong> al mercato immobiliare del Sud Italia.'],
-      ['p','Ci vogliono <strong>3 minuti</strong> per iniziare:'],
-      ['ebullets',[
-        ['1️⃣',`<strong>Entra nel software</strong> con le tue credenziali`],
-        ['2️⃣',`<strong>Disegna la zona</strong> che ti interessa nel Sud`],
-        ['3️⃣',`<strong>Guarda la classifica</strong>: ogni immobile ordinato dal più conveniente al meno conveniente`],
-      ]],
-      ['p','Il Sud è il mercato con gli <strong>scostamenti più ampi d\'Italia</strong>. Il motivo non è la quantità di immobili: è che il mercato è <strong>meno efficiente nell\'aggregare le informazioni</strong>. <strong><em>Chi ha il dato giusto trova opportunità che gli altri non vedono.</em></strong>'],
-      ['cta','Accedi adesso','[LINK_SOFTWARE]'],
-      ['sign']
-    ]
-  },
 
   { id:'s2', name:'La classifica di stamattina', timing:'Giorno 1 · T+24h', bucket:'Tutti', hasHeader:false,
     subjects:['Hai visto cosa c\'era stamattina nel Sud?','La classifica di oggi. Vale i 3 minuti.','Questo dato nessun agente te lo dà.'],
@@ -656,7 +868,7 @@ sud: { label:'Sud Italia', emails: [
 }; // end zones
 
 // ─── UI ──────────────────────────────────────────────────────────────────────
-let currentZone = 'nord';
+let currentZone = 'conferme';
 let currentEmail = null;
 
 function switchZone(zone, el) {

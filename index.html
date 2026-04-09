@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RATIO — Email HTML Templates v3</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#EEF0F3;color:#1a1a1a;height:100vh;overflow:hidden}
+.app{display:flex;height:100vh}
+.sidebar{width:270px;background:#1B3A6B;color:#fff;overflow-y:auto;flex-shrink:0;display:flex;flex-direction:column}
+.sidebar-header{padding:22px 20px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sidebar-logo{font-size:22px;font-weight:800;letter-spacing:-1px}
+.sidebar-sub{font-size:10px;color:rgba(255,255,255,.4);margin-top:3px;text-transform:uppercase;letter-spacing:1.5px}
+.zone-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.1)}
+.ztab{flex:1;padding:11px 0;text-align:center;font-size:12px;font-weight:600;cursor:pointer;color:rgba(255,255,255,.4);transition:all .2s;border-bottom:2px solid transparent}
+.ztab.active{color:#F5C518;border-bottom-color:#F5C518}
+.email-list{padding:6px 0;flex:1}
+.eitem{padding:9px 18px;cursor:pointer;transition:background .15s;border-left:3px solid transparent}
+.eitem:hover{background:rgba(255,255,255,.06)}
+.eitem.active{background:rgba(245,197,24,.12);border-left-color:#F5C518}
+.eitem-name{font-size:12px;font-weight:600;line-height:1.3}
+.eitem-meta{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px}
+.main{flex:1;overflow-y:auto;padding:28px}
+.card{background:#fff;border-radius:8px;border:1px solid #E0E3E8;margin-bottom:18px;overflow:hidden}
+.card-header{padding:18px 28px;border-bottom:1px solid #F0F0F0;display:flex;justify-content:space-between;align-items:center}
+.card-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#888}
+.email-title{font-size:21px;font-weight:700;color:#1B3A6B;padding:22px 28px 0}
+.meta-row{display:flex;gap:10px;padding:12px 28px 18px;flex-wrap:wrap}
+.mbadge{background:#F0F3FA;border-radius:20px;padding:4px 12px;font-size:12px;color:#555}
+.mbadge b{color:#1B3A6B}
+.slist{padding:0 28px 20px}
+.srow{display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #F5F5F5;align-items:flex-start}
+.srow:last-child{border-bottom:none}
+.vbadge{width:20px;height:20px;border-radius:50%;background:#1B3A6B;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.stext{font-size:13px;line-height:1.4;color:#222}
+.ptext{font-size:11px;color:#999;margin-top:2px}
+.preview-wrap{padding:0 28px 28px}
+.email-frame-wrap{border:1px solid #E0E3E8;border-radius:6px;overflow:hidden;background:#fff}
+iframe{border:none;width:100%;display:block;min-height:400px}
+.copy-btn{background:#1B3A6B;color:#fff;border:none;padding:7px 16px;border-radius:4px;font-size:12px;font-weight:700;cursor:pointer;transition:background .2s}
+.copy-btn:hover{background:#2a5298}
+.copy-btn.ok{background:#16a34a}
+.raw-toggle{padding:10px 28px;font-size:12px;color:#999;cursor:pointer;display:flex;align-items:center;gap:6px;border-top:1px solid #F0F0F0}
+.raw-toggle:hover{color:#555}
+.raw-wrap{display:none;padding:4px 28px 20px}
+.raw-wrap textarea{width:100%;height:180px;font-family:'Courier New',monospace;font-size:11px;color:#444;background:#F9FAFB;border:1px solid #E0E3E8;border-radius:4px;padding:10px;resize:vertical}
+.placeholder{display:flex;align-items:center;justify-content:center;height:60vh;color:#aaa;font-size:15px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">RATIO</div>
+      <div class="sidebar-sub">Email Templates · v3</div>
+    </div>
+    <div class="zone-tabs">
+      <div class="ztab active" onclick="switchZone('nord',this)">Nord</div>
+      <div class="ztab" onclick="switchZone('centro',this)">Centro</div>
+      <div class="ztab" onclick="switchZone('sud',this)">Sud</div>
+    </div>
+    <div class="email-list" id="emailList"></div>
+  </div>
+  <div class="main" id="mainPanel">
+    <div class="placeholder">← Seleziona un'email dalla sidebar</div>
+  </div>
+</div>
+
+<script>
+// ─── RENDER ENGINE ────────────────────────────────────────────────────────────
+const FA = 'font-family:Arial,Helvetica,sans-serif;';
+const P  = FA+'font-size:15px;color:#2A2A2A;line-height:1.85;margin:0 0 18px;';
+const P2 = FA+'font-size:14px;color:#2A2A2A;line-height:1.75;margin:0 0 0;';
+
+function b(t){ return `<strong style="color:#1B3A6B;">${t}</strong>`; }
+function bi(t){ return `<strong><em>${t}</em></strong>`; }
+
+function renderBlock(bl) {
+  switch(bl[0]) {
+    case 'greeting':
+      return `<p style="${P}margin:0 0 24px;"><strong style="${FA}color:#1B3A6B;font-size:16px;">[NOME]</strong>,</p>`;
+
+    case 'p':
+      return `<p style="${P}">${bl[1]}</p>`;
+
+    case 'sign':
+      return `<p style="${FA}font-size:14px;color:#888;margin:28px 0 0;line-height:1.6;">Il team Ratio</p>`;
+
+    case 'ps':
+      return `<p style="${FA}font-size:13px;color:#999;margin:18px 0 0;padding:16px 0 0;border-top:1px solid #F0F0F0;line-height:1.65;"><strong>P.S.</strong> ${bl[1]}</p>`;
+
+    case 'hook':
+      return `<p style="${FA}font-size:18px;font-weight:800;color:#1B3A6B;line-height:1.4;margin:0 0 22px;letter-spacing:-.2px;">${bl[1]}</p>`;
+
+    case 'sep':
+      return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;"><tr><td style="border-top:1px solid #EBEBEB;"></td></tr></table>`;
+
+    case 'highlight':
+      return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-radius:6px;overflow:hidden;"><tr><td style="background:#FFFBEB;border-left:4px solid #F5C518;padding:14px 20px;"><p style="${FA}font-size:14px;color:#555;line-height:1.7;margin:0;">${bl[1]}</p></td></tr></table>`;
+
+    case 'cta':
+      return `<table cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 8px;"><tr><td style="background:#F5C518;border-radius:6px;box-shadow:0 2px 8px rgba(245,197,24,.35);"><a href="${bl[2]}" style="display:inline-block;padding:14px 36px;${FA}font-size:14px;font-weight:800;color:#1B3A6B;text-decoration:none;letter-spacing:.3px;">${bl[1]} →</a></td></tr></table>`;
+
+    case 'ebullets': {
+      const rows = bl[1].map(([icon, text]) =>
+        `<tr>
+          <td style="vertical-align:top;padding:0 14px 14px 0;font-size:20px;line-height:1;width:28px;">${icon}</td>
+          <td style="${P2}padding-bottom:14px;">${text}</td>
+        </tr>`).join('');
+      return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0 22px;">${rows}</table>`;
+    }
+
+    case 'bullets': {
+      const rows = bl[1].map(t =>
+        `<tr>
+          <td style="vertical-align:top;padding:0 12px 10px 0;${FA}color:#F5C518;font-size:18px;font-weight:900;line-height:1;">›</td>
+          <td style="${P2}padding-bottom:10px;">${t}</td>
+        </tr>`).join('');
+      return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:14px 0 20px;">${rows}</table>`;
+    }
+
+    case 'data': {
+      const rows = bl[1].map(r =>
+        `<tr>
+          <td style="${FA}font-size:12px;color:#7A869A;padding:5px 0;width:58%;">${r[0]}</td>
+          <td style="${FA}font-size:16px;font-weight:800;color:#1B3A6B;padding:5px 0;">${r[1]}</td>
+        </tr>`).join('');
+      return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background:#F0F4FF;border-radius:7px;border-left:4px solid #1B3A6B;overflow:hidden;"><tr><td style="padding:18px 20px;"><p style="${FA}font-size:10px;font-weight:700;color:#1B3A6B;text-transform:uppercase;letter-spacing:1.5px;margin:0 0 14px;">📊 Mercato aggiornato</p><table width="100%" cellpadding="0" cellspacing="0">${rows}</table></td></tr></table>`;
+    }
+
+    case 'pricing':
+      return renderPricing(bl[1]);
+
+    default: return '';
+  }
+}
+
+function renderPricing(plans) {
+  const rows = plans.map(p => {
+    const hl = p[3];
+    const bg  = hl ? 'background:#1B3A6B;' : 'background:#F8F9FB;';
+    const tc  = hl ? 'color:#ffffff;' : 'color:#1B3A6B;';
+    const sc  = hl ? 'color:rgba(255,255,255,.68);' : 'color:#777;';
+    const tag = hl ? `&nbsp;<span style="background:#F5C518;color:#1B3A6B;${FA}font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;vertical-align:middle;letter-spacing:.5px;">CONSIGLIATO</span>` : '';
+    return `<tr><td style="${bg}border-radius:6px;border:1px solid ${hl?'#F5C518':'#E2E5EA'};padding:14px 18px;">
+      <p style="${FA}font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;${tc}margin:0 0 4px;">${p[0]}${tag}</p>
+      <p style="${FA}font-size:17px;font-weight:800;${tc}margin:0 0 6px;">${p[1]}</p>
+      <p style="${FA}font-size:12px;${sc}margin:0;line-height:1.6;">${p[2]}</p>
+    </td></tr><tr><td style="height:8px;"></td></tr>`;
+  }).join('');
+  return `<table width="100%" cellpadding="0" cellspacing="0" style="margin:22px 0;">${rows}</table>`;
+}
+
+function renderEmailHTML(email, zone) {
+  const body = email.body.map(bl => renderBlock(bl)).join('');
+  return renderBodyOnly(body);
+}
+
+function renderWithHeader(bodyHTML, zone) {
+  const zl = {nord:'Nord Italia', centro:'Centro Italia', sud:'Sud Italia'}[zone];
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#F1F3F7;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F1F3F7;"><tr><td align="center" style="padding:32px 16px;">
+<table width="560" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;width:100%;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #DDE0E8;">
+<tr><td style="padding:22px 36px 18px;border-bottom:4px solid #F5C518;">
+  <table width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td><span style="font-family:Arial;font-size:21px;font-weight:800;color:#1B3A6B;letter-spacing:-0.5px;">RATIO</span></td>
+    <td align="right"><span style="font-family:Arial;font-size:10px;color:#C0C5D0;text-transform:uppercase;letter-spacing:1.5px;">${zl}</span></td>
+  </tr></table>
+</td></tr>
+<tr><td style="padding:36px 36px 30px;">${bodyHTML}</td></tr>
+<tr><td style="padding:16px 36px;background:#F9FAFB;border-top:1px solid #EAECF0;">
+  <p style="font-family:Arial;font-size:11px;color:#C5C9D3;margin:0;line-height:1.8;">
+    Hai ricevuto questa email perché hai attivato il trial di Ratio.<br>
+    <a href="[LINK_UNSUB]" style="color:#C5C9D3;">Cancella iscrizione</a> &nbsp;·&nbsp; <a href="[LINK_PRIVACY]" style="color:#C5C9D3;">Privacy Policy</a>
+  </p>
+</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+function renderBodyOnly(bodyHTML) {
+  return `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#ffffff;font-family:Arial,Helvetica,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center">
+<table width="520" cellpadding="0" cellspacing="0" border="0" style="max-width:520px;width:100%;">
+<tr><td style="padding:44px 32px 42px;">${bodyHTML}</td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+// ─── PRICING ─────────────────────────────────────────────────────────────────
+const PP = [
+  ['Piano Mensile','€350 / mese','Nessun impegno annuale. Classifica aggiornata ogni mattina, alert personalizzati sulla tua zona.',false],
+  ['Piano Annuale Smart','€217 / mese · €2.600 / anno','Report settimanale, alert avanzati, accesso beta alle nuove funzionalità. Risparmio di <strong style="color:#F5C518;">€1.600</strong> rispetto al mensile.',true],
+  ['Piano Annuale Pro','€250 / mese · €2.999 / anno','Tutto dell\'Annuale Smart. In più: onboarding dedicato, report mensile personalizzato, sessione trimestrale con il team.',false],
+];
+
+// ─── EMAIL DATA ───────────────────────────────────────────────────────────────
+const zones = {
+
+// ══════════════════════════════════ NORD ══════════════════════════════════════
+nord: { label:'Nord Italia', emails: [
+
+  { id:'n1', name:'Benvenuto e accesso', timing:'Giorno 0 · T+0h', bucket:'Tutti', hasHeader:true,
+    subjects:['Sei dentro. Ecco cosa fare adesso, [NOME].','Il Nord è aperto. 72 ore. Inizia da qui.','[NOME], il tuo trial è attivo.'],
+    previews:['La classifica aggiornata ti aspetta. 3 minuti.','Disegna la zona. Ratio fa il resto.','Tre giorni per vedere il mercato come non l\'hai mai visto.'],
+    body:[
+      ['greeting'],
+      ['p','il pagamento è confermato. Da adesso hai <strong>72 ore di accesso completo</strong> al mercato immobiliare del Nord Italia.'],
+      ['p','Ci vogliono <strong>3 minuti</strong> per iniziare:'],
+      ['ebullets',[
+        ['1️⃣',`<strong>Entra nel software</strong> con le tue credenziali`],
+        ['2️⃣',`<strong>Disegna la zona</strong> che ti interessa nel Nord`],
+        ['3️⃣',`<strong>Guarda la classifica</strong>: ogni immobile ordinato dal più conveniente al meno conveniente`],
+      ]],
+      ['p','Il mercato del Nord <strong><em>si muove velocemente</em></strong>. Gli immobili sotto prezzo di questa settimana non saranno gli stessi della prossima. Vale la pena guardare <strong>oggi</strong>.'],
+      ['cta','Accedi adesso','[LINK_SOFTWARE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'n2', name:'La classifica di stamattina', timing:'Giorno 1 · T+24h', bucket:'Tutti', hasHeader:false,
+    subjects:['Hai visto cosa c\'era stamattina nel Nord?','La classifica di oggi. Vale i 3 minuti.','Questo dato nessun agente te lo dà.'],
+    previews:['Oltre 200 immobili sotto prezzo. Ogni mattina.','Aprila. Poi capisci perché.','Prezzo al mq per via specifica. Solo qui.'],
+    body:[
+      ['greeting'],
+      ['p','la classifica di stamattina nel Nord conta <strong>oltre 200 immobili</strong> con scostamento positivo rispetto alla media della loro via.'],
+      ['ebullets',[
+        ['📊',`Il dato che li ordina <strong>non è il prezzo totale</strong>. Non è la metratura.`],
+        ['📍',`È lo <strong>scostamento rispetto al prezzo medio al mq</strong> di quella via specifica.`],
+        ['🏙️',`Non del quartiere. Non del comune. <strong><em>Di quella via.</em></strong>`],
+      ]],
+      ['p','Questo è lo <strong>street price</strong>. <strong><em>Nessun portale lo calcola per via.</em></strong> Nessun agente lo cita in trattativa. Ratio lo fa ogni mattina.'],
+      ['p','Hai ancora quasi <strong>48 ore</strong>.'],
+      ['cta','Apri la classifica','[LINK_SOFTWARE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'n4', name:'Scadenza imminente', timing:'Giorno 3 · T+69h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Il trial scade tra poche ore, [NOME].','Ultima notte con accesso completo.','Stasera la classifica non è più tua.'],
+    previews:['Scegli come continuare prima di mezzanotte.','Tre piani. Una scelta.','Dopo, solo abbonamento.'],
+    body:[
+      ['greeting'],
+      ['hook','il trial scade stasera.'],
+      ['p','In tre giorni hai avuto accesso alla classifica completa del Nord Italia. <strong>Aggiornata ogni mattina</strong>. Ordinata per <strong>scostamento reale sulla via</strong>, non per prezzo di listino.'],
+      ['p','Puoi continuare in tre modi:'],
+      ['pricing',PP],
+      ['p','La classifica di <strong>domani mattina</strong> ha già oltre 200 immobili in coda. <strong><em>Il Piano Annuale Smart è la scelta di chi usa Ratio come strumento di lavoro.</em></strong>'],
+      ['cta','Continua con Ratio','[LINK_CHECKOUT_ANNUALE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'n5', name:'Trial scaduto', timing:'Giorno 4 · T+96h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Il trial è scaduto, [NOME].','La classifica del Nord di oggi. Senza di te.','Accesso terminato.'],
+    previews:['La zona che hai salvato è ancora lì.','Questa mattina oltre 200 immobili in classifica.','Riattiva quando vuoi.'],
+    body:[
+      ['greeting'],
+      ['p','il trial è scaduto <strong>ieri sera</strong>.'],
+      ['p','La classifica di stamattina nel Nord ha <strong>oltre 200 immobili</strong> sotto prezzo. La zona che hai salvato durante il trial è ancora nel tuo account.'],
+      ['highlight','Senza abbonamento, <strong>quei dati non li vedi</strong>. Puoi riattivare l\'accesso in qualsiasi momento e ripartire esattamente da dove hai lasciato.'],
+      ['cta','Riattiva l\'accesso','[LINK_CHECKOUT_ANNUALE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'n6', name:'Argomento ROI', timing:'Giorno 5 · T+120h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Quanto ti costa non avere Ratio, [NOME]?','Un deal nel Nord vale in media €35.000. Fai il conto.','€217 al mese o €35.000 di margine.'],
+    previews:['Non è marketing. Sono i numeri del flipping al Nord.','Annuale Smart: si ripaga in una trattativa.','Se fai un\'operazione all\'anno, non è più un costo.'],
+    body:[
+      ['greeting'],
+      ['p','un\'operazione di flipping nel Nord Italia produce in media tra i <strong>€30.000 e i €50.000</strong> di margine netto.'],
+      ['data',[['Costo annuale Piano Annuale Smart:','€2.600'],['Margine medio 1 deal Nord:','€30k–50k'],['ROI se 1 deal/anno:','oltre 10×']]],
+      ['p','Chi usa Ratio come strumento di lavoro <strong>non lo considera un costo</strong>. È parte del processo.'],
+      ['p','Nel Nord questo conta <strong>il doppio</strong>: il mercato è liquido, si muove veloce. <strong><em>Il vantaggio informativo per via specifica non si trova da nessun\'altra parte.</em></strong>'],
+      ['cta','Attiva Piano Annuale Smart','[LINK_CHECKOUT_ANNUALE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'n7', name:'Bonus Report Storico', timing:'Giorno 6 · T+144h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Nei prossimi 2 giorni c\'è qualcosa in più.','Il Report Storico 30 giorni. Per chi abbona entro domani.','[NOME], questo non lo include nessun piano di default.'],
+    previews:['Non è un\'offerta. È un documento operativo.','4 settimane di mercato Nord.','Scade tra 48 ore.'],
+    body:[
+      ['greeting'],
+      ['p','il <strong>Report Storico 30 giorni</strong> del mercato Nord non è incluso in nessun piano di abbonamento.'],
+      ['p','Contiene:'],
+      ['ebullets',[
+        ['📋',`<strong>Tutti gli immobili</strong> con scostamento positivo nelle ultime 4 settimane`],
+        ['📍',`<strong>Andamento per via</strong>: zone più attive, vie con i margini più consistenti`],
+        ['📈',`<strong>Trend di apertura o chiusura</strong> del mercato nella tua area specifica`],
+      ]],
+      ['p','È il documento che si usa <strong>prima di ogni trattativa</strong> per capire se quel mercato si sta aprendo o chiudendo.'],
+      ['highlight','<strong>Chi si abbona entro le prossime 48 ore</strong> lo riceve in omaggio, una volta sola. Dopo questa finestra non sarà più disponibile come extra.'],
+      ['cta','Abbonati e ricevi il Report','[LINK_CHECKOUT_ANNUALE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'n8', name:'Domanda diretta', timing:'Giorno 7 · T+168h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Una domanda diretta, [NOME].','C\'è qualcosa che non ti ha convinto?','Leggo questa mail io personalmente.'],
+    previews:['Non un bot. Rispondimi qui.','Il prezzo, il prodotto, il timing.','Se c\'è qualcosa che non funziona, dimmelo.'],
+    body:[
+      ['greeting'],
+      ['p','una domanda diretta: <strong>c\'è qualcosa che non ti ha convinto</strong> durante il trial?'],
+      ['bullets',[
+        `Il <strong>prezzo</strong>`,
+        `La <strong>copertura</strong> del tuo mercato`,
+        `Una <strong>funzionalità</strong> che mancava`,
+        `Il <strong>timing</strong> sbagliato`,
+      ]],
+      ['p','Rispondimi a questa email. <strong>La leggo io</strong>. Non è un automatismo.'],
+      ['p','Se c\'è qualcosa che posso chiarire, o che nel prodotto non funziona come dovrebbe, <strong><em>voglio saperlo</em></strong>. E se è una questione di budget o di momento, possiamo ragionarci.'],
+      ['cta','Guarda i piani','[LINK_CHECKOUT_MENSILE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'n9', name:'Offerta finale + referral', timing:'Giorno 8 · T+192h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Ultima cosa, [NOME]. Poi non ti scrivo più.','€199 per il primo mese. Una sola volta.','Hai un collega che dovrebbe vedere questo?'],
+    previews:['Due opzioni. Scegli quella che fa per te.','Poi torna a prezzo pieno.','Se non è per te, forse è per qualcuno che conosci.'],
+    body:[
+      ['greeting'],
+      ['p','<strong>ultima comunicazione commerciale</strong> da parte nostra.'],
+      ['ebullets',[
+        ['💶',`Se il <strong>prezzo era il problema</strong>: il primo mese del piano mensile è disponibile a <strong>€199 invece di €350</strong>. Una volta sola. Dal secondo mese torna a prezzo pieno. Disdici quando vuoi.`],
+        ['🤝',`Se <strong>non è il momento giusto</strong>, ma conosci un investitore del Nord che potrebbe trovare utile Ratio: rispondici con la sua email. Se si abbona entro 7 giorni, vi mandiamo a entrambi il <strong>Report Storico 30 giorni</strong> del mercato Nord.`],
+      ]],
+      ['p','Nessun obbligo. <strong>Solo se hai qualcuno in mente.</strong>'],
+      ['cta','Primo mese a €199','[LINK_CHECKOUT_RECOVERY]'],
+      ['sign']
+    ]
+  },
+
+  { id:'n10', name:'Nurturing mercato', timing:'Giorno 14+', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Il mercato Nord questa settimana.','Un aggiornamento del mercato. Nessuna offerta.','Cosa sta succedendo nel Nord in questo momento.'],
+    previews:['Solo dati. Poi decidi tu.','Il mercato non si è fermato.','L\'aggiornamento di chi segue il Nord.'],
+    body:[
+      ['greeting'],
+      ['p','aggiornamento del mercato Nord di <strong>questa settimana</strong>.'],
+      ['data',[['Immobili in classifica:','oltre 200/settimana'],['Scostamenti più alti:','fino al 20%+ sulla via'],['Zone più attive:','cinture metropolitane Milano e Bologna']]],
+      ['p','Le opportunità più consistenti si trovano nelle <strong>aree periferiche delle grandi città</strong>. Le vie con gli scostamenti più alti sono quelle dove <strong><em>l\'informazione aggregata di quartiere nasconde il dato reale</em></strong>.'],
+      ['p','Queste sono le informazioni che gli abbonati attivi nel Nord <strong>ricevono ogni mattina</strong>.'],
+      ['cta','Attiva l\'abbonamento','[LINK_CHECKOUT_MENSILE]'],
+      ['sign']
+    ]
+  },
+
+]},
+
+// ══════════════════════════════════ CENTRO ════════════════════════════════════
+centro: { label:'Centro Italia', emails: [
+
+  { id:'c1', name:'Benvenuto e accesso', timing:'Giorno 0 · T+0h', bucket:'Tutti', hasHeader:true,
+    subjects:['Sei dentro. Ecco cosa fare adesso, [NOME].','Il Centro Italia è aperto. 72 ore. Inizia da qui.','[NOME], il tuo trial è attivo.'],
+    previews:['La classifica aggiornata ti aspetta.','Disegna la zona. Ratio fa il resto.','Tre giorni per vedere il mercato come non l\'hai mai visto.'],
+    body:[
+      ['greeting'],
+      ['p','il pagamento è confermato. Da adesso hai <strong>72 ore di accesso completo</strong> al mercato immobiliare del Centro Italia.'],
+      ['p','Ci vogliono <strong>3 minuti</strong> per iniziare:'],
+      ['ebullets',[
+        ['1️⃣',`<strong>Entra nel software</strong> con le tue credenziali`],
+        ['2️⃣',`<strong>Disegna la zona</strong> che ti interessa nel Centro`],
+        ['3️⃣',`<strong>Guarda la classifica</strong>: ogni immobile ordinato dal più conveniente al meno conveniente`],
+      ]],
+      ['p','Il Centro Italia è il mercato <strong>più eterogeneo d\'Italia</strong>. Roma, Firenze, le Marche, l\'Umbria: ogni area si comporta diversamente. <strong><em>Il vantaggio di Ratio è che ordina tutto con lo stesso criterio.</em></strong>'],
+      ['cta','Accedi adesso','[LINK_SOFTWARE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'c2', name:'La classifica di stamattina', timing:'Giorno 1 · T+24h', bucket:'Tutti', hasHeader:false,
+    subjects:['Hai visto cosa c\'era stamattina nel Centro?','La classifica di oggi. Vale i 3 minuti.','Questo dato nessun agente te lo dà.'],
+    previews:['Oltre 200 immobili sotto prezzo. Ogni mattina.','Aprila. Poi capisci perché.','Prezzo al mq per via specifica. Solo qui.'],
+    body:[
+      ['greeting'],
+      ['p','la classifica di stamattina nel Centro conta <strong>oltre 200 immobili</strong> con scostamento positivo rispetto alla media della loro via.'],
+      ['ebullets',[
+        ['🏙️',`Roma da sola ha <strong>decine di microzone</strong> con prezzi che cambiano a pochi isolati di distanza`],
+        ['📍',`Firenze ha <strong>quartieri che si comportano come mercati separati</strong>`],
+        ['📊',`Senza il dato per via specifica, <strong><em>si lavora con stime</em></strong>`],
+      ]],
+      ['p','Ratio calcola il <strong>prezzo medio al metro quadro per ogni via coperta</strong>. Non per il quartiere. Per la via.'],
+      ['p','Hai ancora quasi <strong>48 ore</strong>.'],
+      ['cta','Apri la classifica','[LINK_SOFTWARE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'c4', name:'Scadenza imminente', timing:'Giorno 3 · T+69h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Il trial scade tra poche ore, [NOME].','Ultima notte con accesso completo.','Stasera la classifica non è più tua.'],
+    previews:['Scegli come continuare prima di mezzanotte.','Tre piani. Una scelta.','Dopo, solo abbonamento.'],
+    body:[
+      ['greeting'],
+      ['hook','il trial scade stasera.'],
+      ['p','In tre giorni hai avuto accesso alla classifica completa del Centro Italia. Roma, Firenze, le Marche, l\'Umbria: ogni immobile sotto prezzo, ordinato per <strong>scostamento reale sulla via</strong>.'],
+      ['p','Puoi continuare in tre modi:'],
+      ['pricing',PP],
+      ['p','Al Centro il <strong>dato per via specifica</strong> è lo strumento più utile in trattativa. <strong><em>Il Piano Annuale Smart è la scelta di chi lo usa ogni settimana.</em></strong>'],
+      ['cta','Continua con Ratio','[LINK_CHECKOUT_ANNUALE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'c5', name:'Trial scaduto', timing:'Giorno 4 · T+96h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Il trial è scaduto, [NOME].','La classifica del Centro di oggi. Senza di te.','Accesso terminato.'],
+    previews:['La zona che hai salvato è ancora lì.','Questa mattina oltre 200 immobili in classifica.','Riattiva quando vuoi.'],
+    body:[
+      ['greeting'],
+      ['p','il trial è scaduto <strong>ieri sera</strong>.'],
+      ['p','La classifica di stamattina nel Centro ha <strong>oltre 200 immobili</strong> sotto prezzo. La zona che hai salvato durante il trial è ancora nel tuo account.'],
+      ['highlight','Senza abbonamento, <strong>quei dati non li vedi</strong>. Puoi riattivare in qualsiasi momento e ripartire esattamente da dove hai lasciato.'],
+      ['cta','Riattiva l\'accesso','[LINK_CHECKOUT_ANNUALE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'c6', name:'Argomento ROI', timing:'Giorno 5 · T+120h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Quanto ti costa non avere Ratio, [NOME]?','Un deal al Centro vale in media €35.000. Fai il conto.','€217 al mese o €35.000 di margine.'],
+    previews:['Non è marketing. Sono i numeri del flipping al Centro.','Annuale Smart: si ripaga in una trattativa.','Se fai un\'operazione all\'anno, non è più un costo.'],
+    body:[
+      ['greeting'],
+      ['p','un\'operazione di flipping nel Centro Italia produce in media tra i <strong>€30.000 e i €50.000</strong> di margine netto. A Roma, nelle zone più liquide, si sale.'],
+      ['data',[['Costo annuale Piano Annuale Smart:','€2.600'],['Margine medio 1 deal Centro:','€30k–50k'],['ROI se 1 deal/anno:','oltre 10×']]],
+      ['p','Chi usa Ratio come strumento di lavoro <strong>non lo considera un costo</strong>. È parte del processo.'],
+      ['p','Al Centro il mercato è <strong>frammentato</strong>. <strong><em>Il vantaggio informativo per via specifica non si trova da nessun\'altra parte.</em></strong>'],
+      ['cta','Attiva Piano Annuale Smart','[LINK_CHECKOUT_ANNUALE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'c7', name:'Bonus Report Storico', timing:'Giorno 6 · T+144h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Nei prossimi 2 giorni c\'è qualcosa in più.','Il Report Storico 30 giorni. Per chi abbona entro domani.','[NOME], questo non lo include nessun piano di default.'],
+    previews:['Non è un\'offerta. È un documento operativo.','4 settimane di mercato Centro.','Scade tra 48 ore.'],
+    body:[
+      ['greeting'],
+      ['p','il <strong>Report Storico 30 giorni</strong> del mercato Centro non è incluso in nessun piano di abbonamento.'],
+      ['p','Contiene:'],
+      ['ebullets',[
+        ['📋',`<strong>Tutti gli immobili</strong> con scostamento positivo nelle ultime 4 settimane`],
+        ['📍',`Le <strong>microzone più attive</strong> di Roma e Firenze, andamento per via specifica`],
+        ['📈',`<strong>Trend di apertura o chiusura</strong> del mercato nella tua area`],
+      ]],
+      ['p','È il documento che si usa <strong>prima di ogni trattativa</strong>.'],
+      ['highlight','<strong>Chi si abbona entro le prossime 48 ore</strong> lo riceve in omaggio, una volta sola. Poi non sarà più disponibile come extra.'],
+      ['cta','Abbonati e ricevi il Report','[LINK_CHECKOUT_ANNUALE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'c8', name:'Domanda diretta', timing:'Giorno 7 · T+168h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Una domanda diretta, [NOME].','C\'è qualcosa che non ti ha convinto?','Leggo questa mail io personalmente.'],
+    previews:['Non un bot. Rispondimi qui.','Il prezzo, il prodotto, il timing.','Se c\'è qualcosa che non funziona, dimmelo.'],
+    body:[
+      ['greeting'],
+      ['p','una domanda diretta: <strong>c\'è qualcosa che non ti ha convinto</strong> durante il trial?'],
+      ['bullets',[
+        `Il <strong>prezzo</strong>`,
+        `La <strong>copertura</strong> del tuo mercato`,
+        `Una <strong>funzionalità</strong> che mancava`,
+        `Il <strong>timing</strong> sbagliato`,
+      ]],
+      ['p','Rispondimi a questa email. <strong>La leggo io</strong>. Non è un automatismo.'],
+      ['p','Se c\'è qualcosa che posso chiarire, o che nel prodotto non funziona, <strong><em>voglio saperlo</em></strong>.'],
+      ['cta','Guarda i piani','[LINK_CHECKOUT_MENSILE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'c9', name:'Offerta finale + referral', timing:'Giorno 8 · T+192h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Ultima cosa, [NOME]. Poi non ti scrivo più.','€199 per il primo mese. Una sola volta.','Hai un collega che dovrebbe vedere questo?'],
+    previews:['Due opzioni.','Poi torna a prezzo pieno.','Se non è per te, forse è per qualcuno che conosci.'],
+    body:[
+      ['greeting'],
+      ['p','<strong>ultima comunicazione commerciale</strong> da parte nostra.'],
+      ['ebullets',[
+        ['💶',`Se il <strong>prezzo era il problema</strong>: il primo mese del piano mensile è disponibile a <strong>€199 invece di €350</strong>. Una volta sola. Dal secondo mese torna a prezzo pieno. Disdici quando vuoi.`],
+        ['🤝',`Se <strong>non è il momento giusto</strong>, ma conosci un investitore del Centro che potrebbe trovare utile Ratio: rispondici con la sua email. Se si abbona entro 7 giorni, vi mandiamo a entrambi il <strong>Report Storico 30 giorni</strong> del mercato Centro.`],
+      ]],
+      ['p','Nessun obbligo. <strong>Solo se hai qualcuno in mente.</strong>'],
+      ['cta','Primo mese a €199','[LINK_CHECKOUT_RECOVERY]'],
+      ['sign']
+    ]
+  },
+
+  { id:'c10', name:'Nurturing mercato', timing:'Giorno 14+', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Il mercato Centro questa settimana.','Un aggiornamento del mercato. Nessuna offerta.','Cosa sta succedendo nel Centro in questo momento.'],
+    previews:['Solo dati. Poi decidi tu.','Il mercato non si è fermato.','L\'aggiornamento di chi segue il Centro.'],
+    body:[
+      ['greeting'],
+      ['p','aggiornamento del mercato Centro di <strong>questa settimana</strong>.'],
+      ['data',[['Immobili in classifica:','oltre 200/settimana'],['Scostamenti più alti:','aree di trasformazione Roma'],['Zone più attive:','periferie Roma e Firenze']]],
+      ['p','Le microzone più attive sono le <strong>aree di trasformazione urbana di Roma</strong> e le zone periferiche del mercato fiorentino. Gli scostamenti più alti si trovano dove <strong><em>l\'informazione aggregata nasconde il dato reale per via</em></strong>.'],
+      ['p','Queste sono le informazioni che gli abbonati attivi nel Centro <strong>ricevono ogni mattina</strong>.'],
+      ['cta','Attiva l\'abbonamento','[LINK_CHECKOUT_MENSILE]'],
+      ['sign']
+    ]
+  },
+
+]},
+
+// ══════════════════════════════════ SUD ═══════════════════════════════════════
+sud: { label:'Sud Italia', emails: [
+
+  { id:'s1', name:'Benvenuto e accesso', timing:'Giorno 0 · T+0h', bucket:'Tutti', hasHeader:true,
+    subjects:['Sei dentro. Ecco cosa fare adesso, [NOME].','Il Sud è aperto. 72 ore. Inizia da qui.','[NOME], il tuo trial è attivo.'],
+    previews:['La classifica aggiornata ti aspetta.','Disegna la zona. Ratio fa il resto.','Al Sud gli scostamenti sono i più alti d\'Italia.'],
+    body:[
+      ['greeting'],
+      ['p','il pagamento è confermato. Da adesso hai <strong>72 ore di accesso completo</strong> al mercato immobiliare del Sud Italia.'],
+      ['p','Ci vogliono <strong>3 minuti</strong> per iniziare:'],
+      ['ebullets',[
+        ['1️⃣',`<strong>Entra nel software</strong> con le tue credenziali`],
+        ['2️⃣',`<strong>Disegna la zona</strong> che ti interessa nel Sud`],
+        ['3️⃣',`<strong>Guarda la classifica</strong>: ogni immobile ordinato dal più conveniente al meno conveniente`],
+      ]],
+      ['p','Il Sud è il mercato con gli <strong>scostamenti più ampi d\'Italia</strong>. Il motivo non è la quantità di immobili: è che il mercato è <strong>meno efficiente nell\'aggregare le informazioni</strong>. <strong><em>Chi ha il dato giusto trova opportunità che gli altri non vedono.</em></strong>'],
+      ['cta','Accedi adesso','[LINK_SOFTWARE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'s2', name:'La classifica di stamattina', timing:'Giorno 1 · T+24h', bucket:'Tutti', hasHeader:false,
+    subjects:['Hai visto cosa c\'era stamattina nel Sud?','La classifica di oggi. Vale i 3 minuti.','Questo dato nessun agente te lo dà.'],
+    previews:['Oltre 200 immobili sotto prezzo. Ogni mattina.','Aprila. Poi capisci perché.','Prezzo al mq per via specifica. Solo qui.'],
+    body:[
+      ['greeting'],
+      ['p','la classifica di stamattina nel Sud conta <strong>oltre 200 immobili</strong> con scostamento positivo rispetto alla media della loro via.'],
+      ['ebullets',[
+        ['📊',`Al Sud <strong>l\'asimmetria informativa è la più alta d\'Italia</strong>`],
+        ['📍',`Due strade a 50 metri di distanza a Napoli o Palermo possono valere il <strong>20-25% di differenza</strong>`],
+        ['❌',`Senza il dato per via specifica, <strong><em>quella differenza rimane invisibile</em></strong>`],
+      ]],
+      ['p','Ratio la rende <strong>visibile ogni mattina</strong>.'],
+      ['p','Hai ancora quasi <strong>48 ore</strong>.'],
+      ['cta','Apri la classifica','[LINK_SOFTWARE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'s4', name:'Scadenza imminente', timing:'Giorno 3 · T+69h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Il trial scade tra poche ore, [NOME].','Ultima notte con accesso completo.','Stasera la classifica non è più tua.'],
+    previews:['Scegli come continuare prima di mezzanotte.','Tre piani. Una scelta.','Dopo, solo abbonamento.'],
+    body:[
+      ['greeting'],
+      ['hook','il trial scade stasera.'],
+      ['p','In tre giorni hai avuto accesso alla classifica completa del Sud Italia. Napoli, Bari, Palermo, la costa ionica: ogni immobile sotto prezzo, ordinato per <strong>scostamento reale sulla via</strong>.'],
+      ['p','Puoi continuare in tre modi:'],
+      ['pricing',PP],
+      ['p','Al Sud il <strong>margine per operazione</strong> è tra i più alti d\'Italia. <strong><em>Il Piano Annuale Smart si ripaga con la prima trattativa in cui usi lo street price.</em></strong>'],
+      ['cta','Continua con Ratio','[LINK_CHECKOUT_ANNUALE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'s5', name:'Trial scaduto', timing:'Giorno 4 · T+96h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Il trial è scaduto, [NOME].','La classifica del Sud di oggi. Senza di te.','Accesso terminato.'],
+    previews:['La zona che hai salvato è ancora lì.','Questa mattina oltre 200 immobili in classifica.','Riattiva quando vuoi.'],
+    body:[
+      ['greeting'],
+      ['p','il trial è scaduto <strong>ieri sera</strong>.'],
+      ['p','La classifica di stamattina nel Sud ha <strong>oltre 200 immobili</strong> sotto prezzo. La zona che hai salvato durante il trial è ancora nel tuo account.'],
+      ['highlight','Senza abbonamento, <strong>quei dati non li vedi</strong>. Puoi riattivare in qualsiasi momento e ripartire esattamente da dove hai lasciato.'],
+      ['cta','Riattiva l\'accesso','[LINK_CHECKOUT_ANNUALE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'s6', name:'Argomento ROI', timing:'Giorno 5 · T+120h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Quanto ti costa non avere Ratio, [NOME]?','Un deal al Sud vale in media €35.000. Fai il conto.','€217 al mese o €35.000 di margine.'],
+    previews:['Al Sud i margini sono i più ampi d\'Italia.','Annuale Smart: si ripaga in una trattativa.','Se fai un\'operazione all\'anno, non è più un costo.'],
+    body:[
+      ['greeting'],
+      ['p','un\'operazione di flipping nel Sud Italia produce in media tra i <strong>€25.000 e i €45.000</strong> di margine netto. In alcune zone, si va oltre.'],
+      ['data',[['Costo annuale Piano Annuale Smart:','€2.600'],['Margine medio 1 deal Sud:','€25k–45k'],['ROI se 1 deal/anno:','oltre 9×']]],
+      ['p','I margini al Sud sono tra i più alti d\'Italia perché il mercato è <strong>meno efficiente</strong>. Chi entra con il dato per via specifica lavora su un\'<strong>asimmetria informativa</strong> che gli altri non hanno.'],
+      ['p','<strong><em>Un deal all\'anno copre l\'abbonamento oltre dieci volte.</em></strong>'],
+      ['cta','Attiva Piano Annuale Smart','[LINK_CHECKOUT_ANNUALE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'s7', name:'Bonus Report Storico', timing:'Giorno 6 · T+144h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Nei prossimi 2 giorni c\'è qualcosa in più.','Il Report Storico 30 giorni. Per chi abbona entro domani.','[NOME], questo non lo include nessun piano di default.'],
+    previews:['4 settimane di mercato Sud.','Scade tra 48 ore.','Non è un bonus. È un documento operativo.'],
+    body:[
+      ['greeting'],
+      ['p','il <strong>Report Storico 30 giorni</strong> del mercato Sud non è incluso in nessun piano di abbonamento.'],
+      ['p','Contiene:'],
+      ['ebullets',[
+        ['📋',`<strong>Tutti gli immobili</strong> con scostamento positivo nelle ultime 4 settimane`],
+        ['📍',`<strong>Andamento per via</strong> da Napoli a Palermo, zone con i margini più alti`],
+        ['📈',`<strong>Oscillazioni di mercato</strong> nelle aree meno coperte dai portali`],
+      ]],
+      ['p','Al Sud i dati storici hanno un <strong>valore particolare</strong>: il mercato si muove in modo meno lineare. Chi conosce le ultime 4 settimane <strong><em>entra in trattativa con un vantaggio di contesto</em></strong>.'],
+      ['highlight','<strong>Chi si abbona entro le prossime 48 ore</strong> lo riceve in omaggio, una volta sola.'],
+      ['cta','Abbonati e ricevi il Report','[LINK_CHECKOUT_ANNUALE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'s8', name:'Domanda diretta', timing:'Giorno 7 · T+168h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Una domanda diretta, [NOME].','C\'è qualcosa che non ti ha convinto?','Leggo questa mail io personalmente.'],
+    previews:['Non un bot. Rispondimi qui.','Il prezzo, il prodotto, le zone.','Se c\'è qualcosa che non funziona, dimmelo.'],
+    body:[
+      ['greeting'],
+      ['p','una domanda diretta: <strong>c\'è qualcosa che non ti ha convinto</strong> durante il trial?'],
+      ['bullets',[
+        `Il <strong>prezzo</strong>`,
+        `Le <strong>zone coperte</strong> nel tuo mercato`,
+        `Una <strong>funzionalità</strong> che mancava`,
+        `Il <strong>timing</strong> sbagliato`,
+      ]],
+      ['p','Rispondimi a questa email. <strong>La leggo io</strong>. Non è un automatismo.'],
+      ['p','Al Sud ci sono mercati molto diversi. Se la tua zona non era sufficientemente coperta, o se c\'era qualcosa che non funzionava, <strong><em>voglio saperlo</em></strong>.'],
+      ['cta','Guarda i piani','[LINK_CHECKOUT_MENSILE]'],
+      ['sign']
+    ]
+  },
+
+  { id:'s9', name:'Offerta finale + referral', timing:'Giorno 8 · T+192h', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Ultima cosa, [NOME]. Poi non ti scrivo più.','€199 per il primo mese. Una sola volta.','Hai un collega che dovrebbe vedere questo?'],
+    previews:['Due opzioni.','Poi torna a prezzo pieno.','Se non è per te, forse è per qualcuno che conosci.'],
+    body:[
+      ['greeting'],
+      ['p','<strong>ultima comunicazione commerciale</strong> da parte nostra.'],
+      ['ebullets',[
+        ['💶',`Se il <strong>prezzo era il problema</strong>: il primo mese del piano mensile è disponibile a <strong>€199 invece di €350</strong>. Una volta sola. Dal secondo mese torna a prezzo pieno. Disdici quando vuoi.`],
+        ['🤝',`Se <strong>non è il momento giusto</strong>, ma conosci un investitore del Sud che potrebbe trovare utile Ratio: rispondici con la sua email. Se si abbona entro 7 giorni, vi mandiamo a entrambi il <strong>Report Storico 30 giorni</strong> del mercato Sud.`],
+      ]],
+      ['p','Nessun obbligo. <strong>Solo se hai qualcuno in mente.</strong>'],
+      ['cta','Primo mese a €199','[LINK_CHECKOUT_RECOVERY]'],
+      ['sign']
+    ]
+  },
+
+  { id:'s10', name:'Nurturing mercato', timing:'Giorno 14+', bucket:'Non convertiti', hasHeader:false,
+    subjects:['Il mercato Sud questa settimana.','Un aggiornamento del mercato. Nessuna offerta.','Cosa sta succedendo nel Sud in questo momento.'],
+    previews:['Solo dati. Poi decidi tu.','Il mercato non si è fermato.','L\'aggiornamento di chi segue il Sud.'],
+    body:[
+      ['greeting'],
+      ['p','aggiornamento del mercato Sud di <strong>questa settimana</strong>.'],
+      ['data',[['Immobili in classifica:','oltre 200/settimana'],['Scostamenti più alti:','fino al 25%+ sulla via'],['Zone più attive:','Napoli e Palermo']]],
+      ['p','Le opportunità più consistenti si trovano nelle <strong>aree periferiche delle grandi città</strong> e nei mercati costieri, dove l\'asimmetria informativa è più pronunciata. <strong><em>Napoli e Palermo restano i mercati con la maggiore densità di opportunità nel periodo.</em></strong>'],
+      ['p','Queste sono le informazioni che gli abbonati attivi nel Sud <strong>ricevono ogni mattina</strong>.'],
+      ['cta','Attiva l\'abbonamento','[LINK_CHECKOUT_MENSILE]'],
+      ['sign']
+    ]
+  },
+
+]},
+
+}; // end zones
+
+// ─── UI ──────────────────────────────────────────────────────────────────────
+let currentZone = 'nord';
+let currentEmail = null;
+
+function switchZone(zone, el) {
+  currentZone = zone;
+  document.querySelectorAll('.ztab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderSidebar();
+  document.getElementById('mainPanel').innerHTML = '<div class="placeholder">← Seleziona un\'email</div>';
+}
+
+function renderSidebar() {
+  document.getElementById('emailList').innerHTML = zones[currentZone].emails.map(e =>
+    `<div class="eitem" id="item-${e.id}" onclick="showEmail('${currentZone}','${e.id}')">
+      <div class="eitem-name">${e.name}</div>
+      <div class="eitem-meta">${e.timing} · ${e.bucket}</div>
+    </div>`
+  ).join('');
+}
+
+function showEmail(zone, emailId) {
+  const email = zones[zone].emails.find(e => e.id === emailId);
+  if (!email) return;
+  currentEmail = email;
+  document.querySelectorAll('.eitem').forEach(e => e.classList.remove('active'));
+  const item = document.getElementById('item-' + emailId);
+  if (item) item.classList.add('active');
+
+  const fullHTML = renderEmailHTML(email, zone);
+
+  const subjectRows = email.subjects.map((s, i) =>
+    `<div class="srow">
+      <div class="vbadge">${String.fromCharCode(65+i)}</div>
+      <div><div class="stext">${s}</div><div class="ptext">${email.previews[i]||''}</div></div>
+    </div>`
+  ).join('');
+
+  const hTag = '<div class="mbadge" style="background:#F0FDF4;color:#166534;">✉️ Solo body</div>';
+
+  document.getElementById('mainPanel').innerHTML = `
+    <div class="card">
+      <div class="email-title">${email.name}</div>
+      <div class="meta-row">
+        <div class="mbadge">⏱ <b>${email.timing}</b></div>
+        <div class="mbadge">👤 <b>${email.bucket}</b></div>
+        ${hTag}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Oggetto · Preview text</span></div>
+      <div class="slist">${subjectRows}</div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Anteprima</span>
+        <button class="copy-btn" id="copyBtn" onclick="copyHTML()">Copia HTML</button>
+      </div>
+      <div class="preview-wrap">
+        <div class="email-frame-wrap"><iframe id="previewFrame" scrolling="no"></iframe></div>
+      </div>
+      <div class="raw-toggle" onclick="toggleRaw(this)">▶ Mostra HTML grezzo</div>
+      <div class="raw-wrap" id="rawWrap"><textarea id="rawHTML" readonly></textarea></div>
+    </div>`;
+
+  const frame = document.getElementById('previewFrame');
+  const doc = frame.contentDocument || frame.contentWindow.document;
+  doc.open(); doc.write(fullHTML); doc.close();
+  setTimeout(() => { frame.style.height = (doc.body.scrollHeight + 40) + 'px'; }, 250);
+  document.getElementById('rawHTML').value = fullHTML;
+}
+
+function copyHTML() {
+  if (!currentEmail) return;
+  navigator.clipboard.writeText(renderEmailHTML(currentEmail, currentZone)).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'Copiato!'; btn.classList.add('ok');
+    setTimeout(() => { btn.textContent = 'Copia HTML'; btn.classList.remove('ok'); }, 2000);
+  });
+}
+
+function toggleRaw(el) {
+  const wrap = document.getElementById('rawWrap');
+  const open = wrap.style.display === 'block';
+  wrap.style.display = open ? 'none' : 'block';
+  el.textContent = open ? '▶ Mostra HTML grezzo' : '▼ Nascondi HTML grezzo';
+}
+
+renderSidebar();
+</script>
+</body>
+</html>
